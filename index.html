@@ -59,11 +59,11 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
 /* animated page background */
 .page-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:
-    radial-gradient(ellipse at 14% 16%,color-mix(in srgb,var(--farm-theme-accent,#f5c518) 32%,transparent),transparent 34%),
-    radial-gradient(ellipse at 86% 12%,color-mix(in srgb,var(--farm-theme-accent,#f5c518) 16%,transparent),transparent 30%),
-    radial-gradient(ellipse at 78% 82%,color-mix(in srgb,var(--farm-theme-accent,#f5c518) 22%,transparent),transparent 38%),
-    radial-gradient(ellipse at 24% 84%,color-mix(in srgb,var(--farm-theme-bg,#080b10) 86%,transparent),transparent 36%),
-    linear-gradient(135deg,var(--farm-theme-bg,#080b10) 0%,color-mix(in srgb,var(--farm-theme-panel,#0f1520) 70%,var(--farm-theme-bg,#080b10)) 48%,var(--farm-theme-bg,#080b10) 100%)}
+    radial-gradient(ellipse at 14% 16%,color-mix(in srgb,var(--farm-theme-accent) 58%,transparent),transparent 34%),
+    radial-gradient(ellipse at 86% 12%,color-mix(in srgb,var(--farm-theme-text) 24%,transparent),transparent 30%),
+    radial-gradient(ellipse at 78% 82%,color-mix(in srgb,var(--farm-theme-accent) 44%,var(--farm-theme-bg)),transparent 38%),
+    radial-gradient(ellipse at 24% 84%,color-mix(in srgb,var(--farm-theme-panel) 78%,var(--farm-theme-accent)),transparent 36%),
+    linear-gradient(135deg,var(--farm-theme-bg) 0%,color-mix(in srgb,var(--farm-theme-panel) 76%,var(--farm-theme-accent)) 48%,var(--farm-theme-bg) 100%)}
 
 /* ── SHARED NAV ── */
 nav,.dashboard-nav{
@@ -287,7 +287,7 @@ footer{padding:26px 48px;border-top:1px solid var(--border);
   --dash-accent-3:#00d477;
   --dash-shadow:inset 0 1px 0 rgba(255,255,255,0.055),0 12px 34px rgba(0,0,0,0.28);
 }
-#dashboard-view,#farms-view{background:var(--dash-page);color:var(--dash-text);
+#dashboard-view,#farms-view{background:transparent;color:var(--dash-text);
   font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;overflow-x:hidden}
 .dashboard-main{flex:1;padding:94px 24px 24px;display:flex;flex-direction:column;gap:14px;
   max-width:1440px;width:100%;margin:0 auto;position:relative;z-index:1}
@@ -538,9 +538,21 @@ footer{padding:26px 48px;border-top:1px solid var(--border);
 .promo-dot:hover{background:rgba(255,255,255,0.5)}
 .promo-dot.active{width:32px;background:var(--farm-theme-accent);box-shadow:0 0 10px var(--farm-theme-shadow)}
 .farms-shell{display:flex;flex-direction:column;gap:16px}
+.farms-tvl-bar{display:flex;align-items:center;justify-content:center;gap:8px;
+  align-self:center;width:fit-content;max-width:100%;
+  background:color-mix(in srgb,var(--farm-theme-panel) 78%,var(--farm-theme-bg));
+  border:1px solid var(--farm-theme-border);
+  border-radius:14px;padding:16px 64px;box-shadow:0 8px 28px rgba(0,0,0,0.28);
+  font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;letter-spacing:0;color:var(--farm-theme-muted)}
+.farms-tvl-bar strong{font-family:'DM Sans',sans-serif;font-size:0.98rem;font-weight:800;color:var(--farm-theme-text)}
 .farm-loading{font-family:'Space Mono',monospace;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;
   color:var(--farm-theme-muted);text-align:center;padding:52px 16px;animation:rv-pulse 1.4s ease-in-out infinite}
 .farm-empty{font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--farm-theme-muted);text-align:center;padding:44px 16px;letter-spacing:0.06em}
+.farms-rewards-bar{display:flex;align-items:center;justify-content:center;gap:9px;margin:4px 0 14px;
+  background:color-mix(in srgb,var(--farm-theme-bg) 72%,transparent);
+  border:1px solid var(--farm-theme-border);border-radius:12px;padding:16px 22px;
+  font-family:'Space Mono',monospace;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--farm-theme-muted)}
+.farms-rewards-bar strong{font-family:'DM Sans',sans-serif;font-size:1.05rem;font-weight:800;color:var(--farm-theme-text);letter-spacing:0;text-transform:none}
 .farm-item{scroll-margin-top:112px}
 .farm-item.farm-jump-highlight{animation:farm-jump-glow 1.45s ease-out}
 @keyframes farm-jump-glow{
@@ -563,7 +575,7 @@ footer{padding:26px 48px;border-top:1px solid var(--border);
 .farm-rank-pos{font-size:0.58rem}
 .farm-rank-value{font-size:0.92rem;white-space:nowrap}
 .farm-rank-name{font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;color:#fff;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+  overflow:hidden;text-overflow:ellipsis}
 .farm-rank-id,.nexion-farms-count{font-family:'Space Mono',monospace;font-size:0.54rem;color:var(--farm-theme-muted)}
 .farm-rank-row{transition:transform 0.18s,border-color 0.18s,box-shadow 0.18s,background 0.18s;cursor:pointer}
 .farm-rank-row:hover{transform:translateY(-4px) scale(1.015)}
@@ -1539,6 +1551,7 @@ footer{padding:26px 48px;border-top:1px solid var(--border);
   </section>
 
   <div class="farms-shell">
+    <div class="farms-tvl-bar">Total Value Locked: <strong id="farms-total-tvl">—</strong></div>
     <div class="farm-rank-grid" id="farm-rank-grid"></div>
 
     <div class="rv-card">
@@ -1577,6 +1590,7 @@ footer{padding:26px 48px;border-top:1px solid var(--border);
           </div>
         </div>
       </div>
+      <div class="farms-rewards-bar">Total Claimable Rewards: <strong id="farms-total-rewards">$0.00 USD</strong></div>
       <div id="farms-body"><div class="farm-loading">··· Loading farm balances…</div></div>
       <div id="farm-theme-modal" class="farm-theme-modal" hidden role="dialog" aria-modal="true" aria-labelledby="farm-theme-title">
         <div class="farm-theme-dialog">
@@ -2797,6 +2811,24 @@ function tickFarmCountdowns() {
     }
   });
   if (Object.keys(farmRemainingLive).length) renderFarmRankings();
+  updateFarmsTotalRewards();
+}
+function updateFarmsTotalRewards() {
+  const el = document.getElementById('farms-total-rewards');
+  if (!el) return;
+  const nowSec = Math.floor(Date.now() / 1000);
+  let total = 0;
+  Object.values(farmPendingLive).forEach(live => {
+    if (!live || typeof live.pendingBase !== 'bigint') return;
+    let pendingRaw = live.pendingBase;
+    if (typeof live.staked === 'bigint' && typeof live.totalStaked === 'bigint' && live.staked > 0n && live.totalStaked > 0n && live.duration > 0) {
+      const elapsed = Math.max(Math.min(nowSec, live.endTime) - live.baseTime, 0);
+      pendingRaw = live.pendingBase + live.totalReward * BigInt(elapsed) * live.staked / (BigInt(live.duration) * live.totalStaked);
+    }
+    const v = rawUsd(pendingRaw, live.rewardScaledPrice, live.rewardDec);
+    if (Number.isFinite(v)) total += v;
+  });
+  el.textContent = fmtFarmUsd(total, 2) + ' USD';
 }
 function fmtFarmFixed(raw, dec) {
   const n = Number(ethers.formatUnits(raw, dec));
@@ -3277,7 +3309,8 @@ function farmNum(s) {
 }
 
 function compactFarmName(name) {
-  return name.replace(/\s+\/\s+/g, '/').replace(/\s+LP$/i, ' LP');
+  return name.replace(/\s+\/\s+/g, '/').replace(/\s+LP$/i, ' LP')
+    .toUpperCase().replace(/EHEX/g, 'eHEX').replace(/PHEX/g, 'pHEX');
 }
 
 function withUsdLabel(value) {
@@ -3291,7 +3324,7 @@ function farmRankTitleHTML(farm) {
   return `
     <div class="farm-rank-farm">
       <div class="farm-pair-logos" aria-hidden="true">${tokens.map(tokenLogoHTML).join('')}</div>
-      <div class="farm-rank-name">${compactFarmName(farm.name)}<span class="farm-rank-id"> ${farm.label}</span></div>
+      <div class="farm-rank-name">${compactFarmName(farm.name)}<span class="farm-rank-id"> #${NEXION_FARMS.findIndex(f => f.label === farm.label) + 1}</span></div>
     </div>`;
 }
 
@@ -3411,6 +3444,13 @@ function renderFarmTable(farms) {
     </table>`;
 }
 
+function updateFarmsTotalTvl() {
+  const el = document.getElementById('farms-total-tvl');
+  if (!el) return;
+  const total = NEXION_FARMS.reduce((sum, f) => sum + farmNum(f.tvl), 0);
+  el.textContent = '$' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function renderFarms() {
   const body = document.getElementById('farms-body');
   if (!body) return;
@@ -3418,6 +3458,7 @@ function renderFarms() {
   if (stakedToggle) stakedToggle.checked = farmsStakedOnly;
   const countEl = document.querySelector('.nexion-farms-count');
   if (countEl) countEl.textContent = NEXION_FARMS.length + (NEXION_FARMS.length === 1 ? ' farm' : ' farms');
+  updateFarmsTotalTvl();
   if (!farmsReady) {
     body.innerHTML = '<div class="farm-loading">··· Loading farm balances…</div>';
     return;
