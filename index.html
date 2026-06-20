@@ -149,6 +149,30 @@ nav,.dashboard-nav{
 
 /* ── HOME VIEW ── */
 body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;line-height:1.6;overflow-x:hidden}
+body.site-loading{overflow:hidden}
+
+#site-loader{
+  position:fixed;inset:0;z-index:10000;display:grid;place-items:center;
+  background:
+    radial-gradient(circle at 50% 48%,color-mix(in srgb,var(--farm-theme-accent,#e13245) 10%,transparent),transparent 24%),
+    linear-gradient(135deg,
+      color-mix(in srgb,var(--farm-theme-bg,#080b10) 94%,#160208),
+      color-mix(in srgb,var(--farm-theme-panel,#0f1520) 62%,#2b0710));
+  color:color-mix(in srgb,var(--farm-theme-accent,#e13245) 78%,#fff);
+  opacity:1;visibility:visible;transition:opacity 0.45s ease,visibility 0.45s ease;
+  pointer-events:auto}
+#site-loader::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+  opacity:0.65}
+.site-loader-word{
+  position:relative;font-family:'Space Mono',monospace;font-size:0.88rem;font-weight:700;
+  letter-spacing:0.34em;text-transform:uppercase;text-shadow:0 0 18px var(--farm-theme-shadow,rgba(225,50,69,0.28));
+  animation:loader-breathe 1.45s ease-in-out infinite}
+.site-loader-word::after{content:'';display:inline-block;width:1.4em;text-align:left;animation:loader-dots 1.2s steps(4,end) infinite}
+body.site-loaded #site-loader{opacity:0;visibility:hidden;pointer-events:none}
+@keyframes loader-breathe{0%,100%{opacity:0.55;transform:translateY(0)}50%{opacity:1;transform:translateY(-1px)}}
+@keyframes loader-dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%,100%{content:'...'}}
 
 /* HERO */
 .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;
@@ -359,9 +383,9 @@ footer{padding:26px 48px;border-top:1px solid var(--border);
   letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px}
 .rv-tok-val.rv-price-val{font-family:'DM Sans',sans-serif;font-size:1.8rem;font-weight:300;
   letter-spacing:-0.04em;color:#fff;line-height:1;display:block;margin-bottom:4px}
-.rv-price-card .rv-price-val{font-size:2.2rem}
+.rv-price-card .rv-price-val{font-size:1.9rem}
 .rv-price-card a:hover .rv-price-val,.rv-price-card a:hover .rv-tok-usd{opacity:0.75}
-.rv-price-change{font-family:'Space Mono',monospace;font-size:0.7rem;margin-top:4px;letter-spacing:0.04em;font-weight:700}
+.rv-price-change{font-family:'Space Mono',monospace;font-size:1.15rem;margin-top:7px;letter-spacing:0.04em;font-weight:700}
 .rv-tok-usd{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--dash-faint);margin-top:7px;letter-spacing:0.02em}
 .rv-price-change.pct-up{color:#39ff7e}
 .rv-price-change.pct-dn{color:#ff4e6a}
@@ -1123,8 +1147,11 @@ footer{padding:26px 48px;border-top:1px solid var(--border);
 .wallet-action-card-icon{font-family:'Space Mono',monospace;font-size:1.15rem;line-height:1;color:#34393e}
 </style>
 </head>
-<body>
+<body class="site-loading">
 <div class="page-bg"></div>
+<div id="site-loader" role="status" aria-live="polite" aria-label="Loading DividendX">
+  <div class="site-loader-word">Loading</div>
+</div>
 
 <!-- WALLET PICKER + ACCOUNT POPUP -->
 <div id="wallet-picker" aria-hidden="true" onclick="if(event.target===this){window.DivXWallets?.closePicker();hideWalletActions();}">
@@ -1629,6 +1656,22 @@ footer{padding:26px 48px;border-top:1px solid var(--border);
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
 <script>
+// ── SITE LOADER ──
+const siteLoaderStartedAt = performance.now();
+let siteLoaderHidden = false;
+function hideSiteLoader() {
+  if (siteLoaderHidden) return;
+  siteLoaderHidden = true;
+  const delay = Math.max(0, 850 - (performance.now() - siteLoaderStartedAt));
+  setTimeout(() => {
+    document.body.classList.remove('site-loading');
+    document.body.classList.add('site-loaded');
+  }, delay);
+}
+if (document.readyState === 'complete') hideSiteLoader();
+else window.addEventListener('load', hideSiteLoader, { once: true });
+setTimeout(hideSiteLoader, 2400);
+
 // ── PAGE SWITCHING ──
 function showPage(page) {
   const views = ['home','dashboard','farms'];
@@ -1829,6 +1872,12 @@ function fmtDashToken(raw, decimals = 18) {
   return n.toLocaleString('en-US', { maximumFractionDigits: n >= 1000 ? 2 : 5 });
 }
 
+function dashTokenAmount(raw, decimals = 18) {
+  if (!window.ethers || typeof raw !== 'bigint') return 0;
+  const n = Number(ethers.formatUnits(raw, decimals));
+  return Number.isFinite(n) ? n : 0;
+}
+
 async function updateDashboardWalletBalances() {
   const addr = window.sharedWalletAddr;
   const provider = window.DivXWallets?.getActiveProvider?.() || walletProvider || window.ethereum;
@@ -1843,13 +1892,21 @@ async function updateDashboardWalletBalances() {
       divx.balanceOf(addr).catch(() => 0n),
       distrox.balanceOf(addr).catch(() => 0n)
     ]);
+    const divxAmt = dashTokenAmount(divxBal, 18);
+    const distroxAmt = dashTokenAmount(distroxBal, 18);
+    const [divxPrice, distroxPrice] = await Promise.all([
+      getDashboardTokenPrice(DASH_DIVX_TOKEN, dashboardPriceUsd),
+      getDashboardTokenPrice(DASH_DISTROX_TOKEN, dashboardDistroxPriceUsd)
+    ]);
     set('rv-divx', fmtDashToken(divxBal, 18));
     set('rv-distrox', fmtDashToken(distroxBal, 18));
-    set('rv-divx-usd', '—');
-    set('rv-distrox-usd', '—');
+    set('rv-divx-usd', divxPrice ? dashUsd(divxAmt * divxPrice, 2) + ' USD' : 'Awaiting price feed');
+    set('rv-distrox-usd', distroxPrice ? dashUsd(distroxAmt * distroxPrice, 2) + ' USD' : 'Awaiting price feed');
   } catch (e) {
     set('rv-divx', '—');
     set('rv-distrox', '—');
+    set('rv-divx-usd', '—');
+    set('rv-distrox-usd', '—');
   }
 }
 
@@ -1993,6 +2050,8 @@ const DASH_ERC20_ABI = [
 ];
 let dashboardBurnItems = [];
 let dashboardPriceUsd = 0;
+let dashboardDistroxPriceUsd = 0;
+const dashboardTokenPricesUsd = {};
 
 function dashSet(id, value) {
   const el = document.getElementById(id);
@@ -2019,6 +2078,23 @@ function dashUsd(value, digits = 2) {
   if (n <= 0) return '$0.00';
   if (n < 0.01) return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 8, maximumFractionDigits: 8 });
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+function priceFromDexResponse(res) {
+  const pairs = Array.isArray(res?.pairs) ? res.pairs : [];
+  const pair = pairs.sort((a, b) => Number(b?.liquidity?.usd || 0) - Number(a?.liquidity?.usd || 0))[0];
+  return Number(pair?.priceUsd || 0);
+}
+async function getDashboardTokenPrice(token, fallback = 0) {
+  const key = String(token || '').toLowerCase();
+  if (dashboardTokenPricesUsd[key]) return dashboardTokenPricesUsd[key];
+  if (fallback) {
+    dashboardTokenPricesUsd[key] = Number(fallback);
+    return dashboardTokenPricesUsd[key];
+  }
+  const res = await fetch(DASH_DEX_API + token).then(r => r.ok ? r.json() : null).catch(() => null);
+  const price = priceFromDexResponse(res);
+  if (price) dashboardTokenPricesUsd[key] = price;
+  return price;
 }
 function dashAgo(timestamp) {
   const t = Date.parse(timestamp || '');
@@ -2162,13 +2238,14 @@ async function refreshDashboard() {
   try {
     const provider = new ethers.JsonRpcProvider(DASH_RPC);
     const token = new ethers.Contract(DASH_DIVX_TOKEN, DASH_ERC20_ABI, provider);
-    const [decimals, totalSupplyRaw, deadRaw, zeroRaw, treasuryRaw, dexRes, tokenRes, countersRes, transfersRes] = await Promise.all([
+    const [decimals, totalSupplyRaw, deadRaw, zeroRaw, treasuryRaw, dexRes, distroxDexRes, tokenRes, countersRes, transfersRes] = await Promise.all([
       token.decimals().catch(() => 18),
       token.totalSupply().catch(() => 0n),
       token.balanceOf(DASH_DEAD).catch(() => 0n),
       token.balanceOf(DASH_ZERO).catch(() => 0n),
       provider.getBalance(DASH_TREASURY).catch(() => 0n),
       fetch(DASH_DEX_API + DASH_DIVX_TOKEN).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(DASH_DEX_API + DASH_DISTROX_TOKEN).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch(`${DASH_SCAN_API}/tokens/${DASH_DIVX_TOKEN}`).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch(`${DASH_SCAN_API}/tokens/${DASH_DIVX_TOKEN}/counters`).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch(`${DASH_SCAN_API}/tokens/${DASH_DIVX_TOKEN}/transfers`).then(r => r.ok ? r.json() : null).catch(() => null)
@@ -2184,6 +2261,9 @@ async function refreshDashboard() {
     const pairs = Array.isArray(dexRes?.pairs) ? dexRes.pairs : [];
     const pair = pairs.sort((a, b) => Number(b?.liquidity?.usd || 0) - Number(a?.liquidity?.usd || 0))[0];
     dashboardPriceUsd = Number(pair?.priceUsd || tokenRes?.exchange_rate || 0);
+    dashboardDistroxPriceUsd = priceFromDexResponse(distroxDexRes);
+    if (dashboardPriceUsd) dashboardTokenPricesUsd[DASH_DIVX_TOKEN.toLowerCase()] = dashboardPriceUsd;
+    if (dashboardDistroxPriceUsd) dashboardTokenPricesUsd[DASH_DISTROX_TOKEN.toLowerCase()] = dashboardDistroxPriceUsd;
     const change = Number(pair?.priceChange?.h24 || 0);
     // PLS/USD derived from the DIVX pair (priceUsd ÷ priceNative when quoted in WPLS)
     const plsPriceUsd = (Number(pair?.priceUsd) > 0 && Number(pair?.priceNative) > 0) ? Number(pair.priceUsd) / Number(pair.priceNative) : 0;
@@ -2207,6 +2287,7 @@ async function refreshDashboard() {
     dashSet('c-holders', countersRes?.token_holders_count || tokenRes?.holders || '—');
     dashSet('c-txs', countersRes?.transfers_count ? Number(countersRes.transfers_count).toLocaleString('en-US') + ' transfers' : 'transfers');
     renderDashboardBurns(Array.isArray(transfersRes?.items) ? transfersRes.items : []);
+    if (window.sharedWalletAddr) updateDashboardWalletBalances();
   } catch (err) {
     console.warn('Dashboard refresh failed:', err);
     ['c-price','c-burned','c-dead','c-supply','c-holders'].forEach(id => dashSet(id, 'Unavailable'));
@@ -2660,8 +2741,9 @@ function chartIconHTML() {
   return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19V5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="m7 15 3.4-3.4 2.4 2.4L18 8.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 8h3v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 function rewardProjectionButtonHTML(farm, index) {
+  const rewardLabel = farmTokenLabel(farm.rewardToken);
   const rows = [['Daily:', 'd'], ['Weekly:', 'w'], ['Monthly:', 'm'], ['Yearly:', 'y']]
-    .map(([label, k]) => `<div><span>${label}</span><strong id="f-proj-${index}-${k}">0.00 ${farm.rewardToken} ($0.00 USD)</strong></div>`).join('');
+    .map(([label, k]) => `<div><span>${label}</span><strong id="f-proj-${index}-${k}">0.00 ${rewardLabel} ($0.00 USD)</strong></div>`).join('');
   return `<span class="farm-reward-projection-wrap"><button class="farm-reward-chart-btn" type="button" title="Rewards projection" aria-label="Rewards projection">${chartIconHTML()}</button><span class="farm-reward-projection-popover" role="tooltip"><span class="farm-reward-projection-title">${chartIconHTML()}<span>Rewards Projection</span></span><span class="farm-reward-projection-lines">${rows}</span></span></span>`;
 }
 
@@ -2803,7 +2885,7 @@ function tickFarmCountdowns() {
     const pendingValue = rawUsd(pendingRaw, live.rewardScaledPrice, live.rewardDec);
     const pendingText = fmtFarmFixed(pendingRaw, live.rewardDec);
     const pendingUsd = fmtFarmUsd(pendingValue, 2);
-    setFarmText('f-pend-' + i, `${pendingText} ${live.rewardToken}`);
+    setFarmText('f-pend-' + i, `${pendingText} ${farmTokenLabel(live.rewardToken)}`);
     setFarmText('f-pend-usd-' + i, pendingUsd + ' USD');
     if (live.farm) {
       live.farm.pending = pendingText;
@@ -2962,7 +3044,7 @@ function applyFarmValuation(farm, i, valuation, hasWallet) {
   if (valuation.remainingRewardsUsd) setFarmText('f-rem-usd-' + i, valuation.remainingRewardsUsd + ' USD');
   if (hasWallet && valuation.userStaked) setFarmText('f-stk-' + i, valuation.userStaked);
   if (hasWallet && valuation.userStakedUsd) setFarmText('f-stk-usd-' + i, `${valuation.userStakedUsd} (${valuation.stakedPct})`);
-  if (hasWallet && valuation.pending) setFarmText('f-pend-' + i, `${valuation.pending} ${farm.rewardToken}`);
+  if (hasWallet && valuation.pending) setFarmText('f-pend-' + i, `${valuation.pending} ${farmTokenLabel(farm.rewardToken)}`);
   if (hasWallet && valuation.pendingUsd) setFarmText('f-pend-usd-' + i, valuation.pendingUsd + ' USD');
   if (valuation.tvl) setFarmText('f-tvl-' + i, valuation.tvl + ' USD');
   if (valuation.remainingRewardTotal && valuation.remainingRewardStart && valuation.remainingRewardEnd) {
@@ -2994,7 +3076,7 @@ function updateFarmProjection(i, farm, info, staked, dec) {
     if (staked > 0n && lpSupply > 0n && dur > 0) raw = totalReward * BigInt(secs) * staked / (BigInt(dur) * lpSupply);
     const tokens = Number(ethers.formatUnits(raw, dec));
     const usd = (tokens * price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    setFarmText('f-proj-' + i + '-' + k, `${fmtFarmFixed(raw, dec)} ${farm.rewardToken} ($${usd} USD)`);
+    setFarmText('f-proj-' + i + '-' + k, `${fmtFarmFixed(raw, dec)} ${farmTokenLabel(farm.rewardToken)} ($${usd} USD)`);
   });
 }
 async function refreshOneFarm(chef, provider, farm, i, addr) {
@@ -3013,7 +3095,7 @@ async function refreshOneFarm(chef, provider, farm, i, addr) {
   if (addr) {
     try { const lp = new ethers.Contract(farm.lp, FARM_ERC20_ABI, provider); setFarmText('f-bal-' + i, fmtFarmAmt(await lp.balanceOf(addr), 18)); } catch (e) {}
     try { const u = await chef.userInfo(pid, addr); staked = u.amount ?? u[0] ?? 0n; setFarmText('f-stk-' + i, fmtFarmAmt(staked, 18)); } catch (e) {}
-    try { pending = await chef.pendingReward(pid, addr); setFarmText('f-pend-' + i, fmtFarmAmt(pending, dec) + ' ' + farm.rewardToken); } catch (e) {}
+    try { pending = await chef.pendingReward(pid, addr); setFarmText('f-pend-' + i, fmtFarmAmt(pending, dec) + ' ' + farmTokenLabel(farm.rewardToken)); } catch (e) {}
   }
   farmLiveStakedRaw[i] = staked;
   const valuation = await fetchNexionValuation(provider, farm, info, totalStaked, staked, pending, dec);
@@ -3313,6 +3395,10 @@ function compactFarmName(name) {
     .toUpperCase().replace(/EHEX/g, 'eHEX').replace(/PHEX/g, 'pHEX');
 }
 
+function farmTokenLabel(token) {
+  return ({ PHEX: 'pHEX', EHEX: 'eHEX' })[token] || token;
+}
+
 function withUsdLabel(value) {
   const text = String(value ?? '').trim();
   if (!text || !text.includes('$') || /\bUSD\b/i.test(text)) return text;
@@ -3365,6 +3451,7 @@ function renderFarmRankings() {
 function renderFarmCard(farm, index) {
   const disc = !window.sharedWalletAddr;
   const farmNumber = Math.max(NEXION_FARMS.indexOf(farm) + 1, index + 1);
+  const rewardLabel = farmTokenLabel(farm.rewardToken);
   const manageBtn = farm.single
     ? `<a class="farm-liquidity-btn" href="${PULSEX_SWAP_URL}?outputCurrency=${farm.lp || DIVX_TOKEN}" target="_blank" rel="noopener">Buy ${farm.name}</a>`
     : `<a class="farm-liquidity-btn" href="${pulsexAddLiquidityURL(farm)}" target="_blank" rel="noopener">Manage Liquidity</a>`;
@@ -3407,7 +3494,7 @@ function renderFarmCard(farm, index) {
         <div class="farm-proto-metric farm-proto-rewards">
           <div class="farm-proto-label">Rewards</div>
           <div class="farm-proto-value with-token">
-            <span class="farm-rewards-tokenline">${tokenLogoHTML(farm.rewardToken)}<span id="f-pend-${index}">${farm.pending} ${farm.rewardToken}</span>${rewardProjectionButtonHTML(farm, index)}</span>
+            <span class="farm-rewards-tokenline">${tokenLogoHTML(farm.rewardToken)}<span id="f-pend-${index}">${farm.pending} ${rewardLabel}</span>${rewardProjectionButtonHTML(farm, index)}</span>
           </div>
           <div class="farm-rewards-usd" id="f-pend-usd-${index}">${farm.pendingUsd} USD</div>
         </div>
@@ -3438,7 +3525,7 @@ function renderFarmTable(farms) {
           <td><div class="ft-name">${farmTitleHTML(farm)}</div><div class="ft-badge">${farm.label}</div></td>
           <td><div class="ft-val">${farm.apr}</div><div class="ft-sub">Live</div></td>
           <td><div class="ft-val">${farm.userStaked}</div><div class="ft-sub">${farm.userStakedUsd}</div></td>
-          <td><div class="ft-val">${farm.pending}</div><div class="ft-sub">${farm.rewardToken}</div></td>
+          <td><div class="ft-val">${farm.pending}</div><div class="ft-sub">${farmTokenLabel(farm.rewardToken)}</div></td>
           <td style="text-align:right"><div class="ft-val">${farm.tvl}</div><div class="ft-sub">USD</div></td>
         </tr>`).join('')}</tbody>
     </table>`;
